@@ -56,7 +56,7 @@ const AdminLogin = () => {
             <label>Email</label>
             <input
               type="email"
-              placeholder="admin@desidhaba.com"
+              placeholder="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
