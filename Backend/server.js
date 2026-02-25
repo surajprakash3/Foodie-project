@@ -31,7 +31,7 @@ app.use("/api/orders", require("./routes/orderRoutes"));
 
 
 app.get("/", (req, res) => {
-  res.json({ message: "Desi Dhaba API is running 🚀" });
+  res.json({ message: "foodie API is running 🚀" });
 });
 
 
