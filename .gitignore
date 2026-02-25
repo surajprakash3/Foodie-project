@@ -1,0 +1,59 @@
+# Node
+node_modules/
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+/dist
+/build
+
+# Misc
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Others
+*.pid
+*.seed
+
+# Ignore uploads
+uploads/
+
+# Ignore cloudinary config
+config/cloudinary.js
+
+# Ignore local database
+*.local.db
+
+# Ignore test output
+/test-output/
+
+# Ignore backups
+*.bak
+
+# Ignore compiled
+*.out
+
+# Ignore frontend build
+Frontend/dist/
+Frontend/node_modules/
+
+# Ignore backend build
+Backend/dist/
+Backend/node_modules/

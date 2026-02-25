@@ -1,0 +1,147 @@
+.dashboard {
+  padding: 40px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 35px;
+}
+
+/* Cards */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+  transition: 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.cardIcon {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.blue {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.green {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.yellow {
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+}
+
+.emerald {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.cardValue {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.cardLabel {
+  color: #64748b;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* Section */
+
+.section {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 25px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #0f172a;
+}
+
+/* Table */
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  padding-bottom: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.table td {
+  padding: 14px 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.orderId {
+  color: #2563eb;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.amount {
+  font-weight: 700;
+}
+
+.status {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pending {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.delivered {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.date {
+  color: #64748b;
+}
+
+.empty {
+  color: #94a3b8;
+}
