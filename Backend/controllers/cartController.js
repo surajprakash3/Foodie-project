@@ -21,7 +21,15 @@ const addToCart = async (req, res) => {
     let cart = await Cart.findOne({ userId });
 
     if (!cart) {
-      cart = new Cart({ userId, items: [], totalAmount: 0 });
+      cart = new Cart({ userId, restaurantId: food.restaurantId, items: [], totalAmount: 0 });
+    } else if (cart.restaurantId && cart.restaurantId.toString() !== food.restaurantId.toString()) {
+      if (cart.items.length > 0) {
+        return res.status(400).json({
+          message: "Cart contains items from another restaurant. Please clear cart first."
+        });
+      } else {
+        cart.restaurantId = food.restaurantId; // update if empty
+      }
     }
 
     // Check if item already exists in cart
@@ -41,15 +49,27 @@ const addToCart = async (req, res) => {
       cart.items.push({ foodId, quantity: quantity || 1 });
     }
 
-    // Recalculate total
-    let total = 0;
+    // Recalculate totals
+    let itemTotal = 0;
     for (const item of cart.items) {
       const foodData = await FoodItem.findById(item.foodId);
       if (foodData) {
-        total += foodData.price * item.quantity;
+        itemTotal += foodData.price * item.quantity;
       }
     }
-    cart.totalAmount = total;
+
+    cart.itemTotal = itemTotal;
+    cart.taxAmount = Math.round(itemTotal * 0.05); // 5% GST
+
+    // Free delivery for Premium Users
+    cart.deliveryFee = (itemTotal > 0 && !req.user.isPremium) ? 40 : 0;
+
+    cart.discountAmount = 0; // Hook up coupons later
+    cart.totalAmount = cart.itemTotal + cart.taxAmount + cart.deliveryFee - cart.discountAmount;
+
+    if (cart.items.length === 0) {
+      cart.restaurantId = null;
+    }
 
     await cart.save();
 
@@ -92,15 +112,27 @@ const removeFromCart = async (req, res) => {
       (item) => item.foodId.toString() !== req.params.foodId
     );
 
-    // Recalculate total
-    let total = 0;
+    // Recalculate totals
+    let itemTotal = 0;
     for (const item of cart.items) {
       const foodData = await FoodItem.findById(item.foodId);
       if (foodData) {
-        total += foodData.price * item.quantity;
+        itemTotal += foodData.price * item.quantity;
       }
     }
-    cart.totalAmount = total;
+
+    cart.itemTotal = itemTotal;
+    cart.taxAmount = Math.round(itemTotal * 0.05); // 5% GST
+
+    // Free delivery for Premium Users
+    cart.deliveryFee = (itemTotal > 0 && !req.user.isPremium) ? 40 : 0;
+
+    cart.discountAmount = 0;
+    cart.totalAmount = cart.itemTotal + cart.taxAmount + cart.deliveryFee - cart.discountAmount;
+
+    if (cart.items.length === 0) {
+      cart.restaurantId = null;
+    }
 
     await cart.save();
 
@@ -119,6 +151,11 @@ const clearCart = async (req, res) => {
     const cart = await Cart.findOne({ userId: req.user._id });
     if (cart) {
       cart.items = [];
+      cart.restaurantId = null;
+      cart.itemTotal = 0;
+      cart.taxAmount = 0;
+      cart.deliveryFee = 0;
+      cart.discountAmount = 0;
       cart.totalAmount = 0;
       await cart.save();
     }

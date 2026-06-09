@@ -36,6 +36,9 @@ const EMPTY_FORM = {
   category: "Pizza",
   rating: "4.0",
   isAvailable: true,
+  isVeg: true,
+  discount: "0",
+  preparationTime: "15",
 };
 
 const Stars = ({ v }) => (
@@ -96,6 +99,9 @@ const AdminFoodsGlobal = () => {
       category: food.category,
       rating: String(food.rating ?? 4),
       isAvailable: food.isAvailable,
+      isVeg: food.isVeg !== undefined ? food.isVeg : true,
+      discount: String(food.discount || 0),
+      preparationTime: String(food.preparationTime || 15),
     });
     setEditId(food._id);
     setShowForm(true);
@@ -333,6 +339,61 @@ const AdminFoodsGlobal = () => {
                   </option>
                 ))}
               </select>
+
+              <div className={styles.checkboxGroup}>
+                <label className={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={form.isAvailable}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        isAvailable: e.target.checked,
+                      })
+                    }
+                  />
+                  Available
+                </label>
+                <label className={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={form.isVeg}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        isVeg: e.target.checked,
+                      })
+                    }
+                  />
+                  Vegetarian
+                </label>
+              </div>
+
+              <div className={styles.numberRow}>
+                <label>
+                  Discount (%)
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={form.discount}
+                    onChange={(e) =>
+                      setForm({ ...form, discount: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Prep Time (mins)
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.preparationTime}
+                    onChange={(e) =>
+                      setForm({ ...form, preparationTime: e.target.value })
+                    }
+                  />
+                </label>
+              </div>
 
               <input
                 type="file"

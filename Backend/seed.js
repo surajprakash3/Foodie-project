@@ -11,7 +11,7 @@ const Restaurant = require("./models/Restaurant");
 const FoodItem = require("./models/FoodItem");
 
 const foodItems = [
-  
+
   {
     name: "Classic Margherita Pizza",
     description: "Fresh mozzarella, tomato sauce & basil on a crispy hand-tossed base",
@@ -48,7 +48,7 @@ const foodItems = [
     rating: 4.3,
   },
 
-  
+
   {
     name: "Classic Beef Burger",
     description: "Juicy beef patty, lettuce, tomato, pickles & special sauce",
@@ -85,7 +85,7 @@ const foodItems = [
     rating: 4.3,
   },
 
-  
+
   {
     name: "Masala French Fries",
     description: "Crispy fries tossed with chaat masala & green chutney dip",
@@ -122,7 +122,7 @@ const foodItems = [
     rating: 4.2,
   },
 
-  
+
   {
     name: "Chocolate Truffle Cake",
     description: "Rich dark chocolate ganache layered cake – pure indulgence",
@@ -159,7 +159,7 @@ const foodItems = [
     rating: 4.7,
   },
 
-  
+
   {
     name: "Butter Chicken",
     description: "Tender chicken in a creamy tomato-butter sauce – The classic",
@@ -189,7 +189,7 @@ const foodItems = [
     rating: 4.9,
   },
 
-  
+
   {
     name: "Mango Lassi",
     description: "Chilled Alphonso mango blended with thick yoghurt & cardamom",
@@ -218,10 +218,28 @@ const seed = async () => {
 
   console.log("🌱 Starting  seed...\n");
 
+  // --- Seed Users ---
+  const usersToSeed = [
+    { name: "Super Admin", email: "admin@foodie.com", password: "admin123", role: "SuperAdmin" },
+    { name: "Restaurant Admin", email: "restaurant@foodie.com", password: "admin123", role: "RestaurantAdmin" },
+    { name: "Delivery Admin", email: "delivery@foodie.com", password: "admin123", role: "DeliveryAdmin" },
+    { name: "Delivery Boy", email: "deliveryboy@foodie.com", password: "admin123", role: "DeliveryBoy" },
+    { name: "Test User", email: "user@foodie.com", password: "user123", role: "User" },
+  ];
 
-  
+  for (const u of usersToSeed) {
+    const exists = await User.findOne({ email: u.email });
+    if (!exists) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(u.password, salt);
+      await User.create({ name: u.name, email: u.email, password: hashedPassword, role: u.role });
+      console.log(`✅ ${u.role} created: ${u.email} / ${u.password}`);
+    } else {
+      console.log(`ℹ️  ${u.role} already exists (${u.email}) – skipping`);
+    }
+  }
 
-  
+
   let restaurant = await Restaurant.findOne({ name: " Kitchen" });
   if (!restaurant) {
     restaurant = await Restaurant.create({
@@ -235,7 +253,7 @@ const seed = async () => {
     console.log("ℹ️  Default restaurant already exists – skipping");
   }
 
-  
+
   const existing = await FoodItem.countDocuments({});
   if (existing === 0) {
     const docs = foodItems.map((f) => ({ ...f, restaurantId: restaurant._id, isAvailable: true }));

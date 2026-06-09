@@ -15,6 +15,10 @@ const AdminRestaurants = () => {
     description: "",
     address: "",
     isActive: true,
+    status: "Open",
+    isPremium: false,
+    commissionRate: 15,
+    avgPreparationTime: 30,
   });
   const [imageFile, setImageFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -47,6 +51,10 @@ const AdminRestaurants = () => {
       description: restaurant.description,
       address: restaurant.address,
       isActive: restaurant.isActive,
+      status: restaurant.status || "Open",
+      isPremium: restaurant.isPremium || false,
+      commissionRate: restaurant.commissionRate || 15,
+      avgPreparationTime: restaurant.avgPreparationTime || 30,
     });
     setEditId(restaurant._id);
     setShowForm(true);
@@ -61,6 +69,10 @@ const AdminRestaurants = () => {
     formData.append("description", form.description);
     formData.append("address", form.address);
     formData.append("isActive", form.isActive);
+    formData.append("status", form.status);
+    formData.append("isPremium", form.isPremium);
+    formData.append("commissionRate", form.commissionRate);
+    formData.append("avgPreparationTime", form.avgPreparationTime);
     if (imageFile) formData.append("image", imageFile);
 
     try {
@@ -168,23 +180,69 @@ const AdminRestaurants = () => {
                 }
               />
 
-              <label className={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={form.isActive}
-                  onChange={(e) =>
-                    setForm({ ...form, isActive: e.target.checked })
-                  }
-                />
-                Active
-              </label>
+              <div className={styles.checkboxGroup}>
+                <label className={styles.checkbox}>
+                  <input
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={(e) =>
+                      setForm({ ...form, isActive: e.target.checked })
+                    }
+                  />
+                  Active Listing
+                </label>
+
+                <label className={styles.checkbox}>
+                  <input
+                    type="checkbox"
+                    checked={form.isPremium}
+                    onChange={(e) =>
+                      setForm({ ...form, isPremium: e.target.checked })
+                    }
+                  />
+                  Premium Partner (Boosted)
+                </label>
+              </div>
+
+              <select
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                className={styles.select}
+              >
+                <option value="Open">Status: Open</option>
+                <option value="Busy">Status: Busy</option>
+                <option value="Closed">Status: Closed</option>
+              </select>
+
+              <div className={styles.numberInputs}>
+                <label>
+                  Platform Commission (%)
+                  <input
+                    type="number"
+                    value={form.commissionRate}
+                    onChange={(e) =>
+                      setForm({ ...form, commissionRate: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Avg Prep Time (mins)
+                  <input
+                    type="number"
+                    value={form.avgPreparationTime}
+                    onChange={(e) =>
+                      setForm({ ...form, avgPreparationTime: e.target.value })
+                    }
+                  />
+                </label>
+              </div>
 
               <button type="submit" disabled={submitting}>
                 {submitting
                   ? "Saving..."
                   : editId
-                  ? "Update"
-                  : "Create"}
+                    ? "Update"
+                    : "Create"}
               </button>
             </form>
           </div>

@@ -42,6 +42,22 @@ const foodItemSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isVeg: {
+      type: Boolean,
+      default: true,
+    },
+    discount: {
+      type: Number,
+      default: 0, // Percentage discount (0-100)
+    },
+    preparationTime: {
+      type: Number,
+      default: 15, // Time in minutes for this specific item
+    },
+    trendingScore: {
+      type: Number,
+      default: 0, // Calculated dynamically by background jobs
+    },
   },
   { timestamps: true }
 );

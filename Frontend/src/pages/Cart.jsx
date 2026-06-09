@@ -116,9 +116,21 @@ const Cart = () => {
 
       <div className={styles.summary}>
         <div className={styles.summaryRow}>
+          <span>Subtotal</span>
+          <span>₹{cart.itemTotal || 0}</span>
+        </div>
+        <div className={styles.summaryRow}>
+          <span>Tax (5%)</span>
+          <span>₹{cart.taxAmount || 0}</span>
+        </div>
+        <div className={styles.summaryRow}>
+          <span>Delivery Fee</span>
+          <span>₹{cart.deliveryFee || 0}</span>
+        </div>
+        <div className={styles.summaryRow} style={{ borderTop: "1px solid #eee", paddingTop: "12px", marginTop: "12px", fontWeight: "bold" }}>
           <span>Total</span>
           <span className={styles.summaryTotal}>
-            ₹{cart.totalAmount}
+            ₹{cart.totalAmount || 0}
           </span>
         </div>
 

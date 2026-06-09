@@ -28,6 +28,9 @@ const AdminFoods = () => {
     price: "",
     category: "",
     isAvailable: true,
+    isVeg: true,
+    discount: 0,
+    preparationTime: 15,
   });
 
   const fetchData = async () => {
@@ -56,6 +59,9 @@ const AdminFoods = () => {
       price: "",
       category: "",
       isAvailable: true,
+      isVeg: true,
+      discount: 0,
+      preparationTime: 15,
     });
     setImageFile(null);
     setEditId(null);
@@ -68,6 +74,9 @@ const AdminFoods = () => {
       price: food.price,
       category: food.category,
       isAvailable: food.isAvailable,
+      isVeg: food.isVeg !== undefined ? food.isVeg : true,
+      discount: food.discount || 0,
+      preparationTime: food.preparationTime || 15,
     });
     setEditId(food._id);
     setShowForm(true);
@@ -82,6 +91,9 @@ const AdminFoods = () => {
     formData.append("price", form.price);
     formData.append("category", form.category);
     formData.append("isAvailable", form.isAvailable);
+    formData.append("isVeg", form.isVeg);
+    formData.append("discount", form.discount);
+    formData.append("preparationTime", form.preparationTime);
     if (imageFile) formData.append("image", imageFile);
 
     try {
@@ -204,26 +216,67 @@ const AdminFoods = () => {
                 }
               />
 
-              <label className={styles.checkboxRow}>
-                <input
-                  type="checkbox"
-                  checked={form.isAvailable}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      isAvailable: e.target.checked,
-                    })
-                  }
-                />
-                Available
-              </label>
+              <div className={styles.checkboxGroup}>
+                <label className={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={form.isAvailable}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        isAvailable: e.target.checked,
+                      })
+                    }
+                  />
+                  Available
+                </label>
+                <label className={styles.checkboxRow}>
+                  <input
+                    type="checkbox"
+                    checked={form.isVeg}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        isVeg: e.target.checked,
+                      })
+                    }
+                  />
+                  Vegetarian
+                </label>
+              </div>
+
+              <div className={styles.numberRow}>
+                <label>
+                  Discount (%)
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={form.discount}
+                    onChange={(e) =>
+                      setForm({ ...form, discount: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Prep Time (mins)
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.preparationTime}
+                    onChange={(e) =>
+                      setForm({ ...form, preparationTime: e.target.value })
+                    }
+                  />
+                </label>
+              </div>
 
               <button type="submit" disabled={submitting}>
                 {submitting
                   ? "Saving..."
                   : editId
-                  ? "Update"
-                  : "Create"}
+                    ? "Update"
+                    : "Create"}
               </button>
             </form>
           </div>

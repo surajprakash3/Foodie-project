@@ -31,13 +31,14 @@ const protect = async (req, res, next) => {
   }
 };
 
-// Admin only middleware
-const adminOnly = (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
+// Role-based authorization middleware
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied. Insufficient permissions." });
+    }
     next();
-  } else {
-    return res.status(403).json({ message: "Access denied. Admin only." });
-  }
+  };
 };
 
-module.exports = { protect, adminOnly };
+module.exports = { protect, authorizeRoles };

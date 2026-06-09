@@ -36,10 +36,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
   };
 
-  const isAdmin = user?.role === "admin";
+  const isSuperAdmin = user?.role === "SuperAdmin";
+  const isRestaurantAdmin = user?.role === "RestaurantAdmin";
+  const isDeliveryAdmin = user?.role === "DeliveryAdmin";
+  const isDeliveryBoy = user?.role === "DeliveryBoy";
+  const isAdmin = isSuperAdmin || isRestaurantAdmin || isDeliveryAdmin;
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, isAdmin }}>
+    <AuthContext.Provider value={{
+      user, login, register, logout, loading,
+      isAdmin, isSuperAdmin, isRestaurantAdmin, isDeliveryAdmin, isDeliveryBoy
+    }}>
       {children}
     </AuthContext.Provider>
   );

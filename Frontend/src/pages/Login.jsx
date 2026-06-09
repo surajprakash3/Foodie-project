@@ -17,7 +17,8 @@ const Login = () => {
     try {
       const user = await login(email, password);
       toast.success("Login successful!");
-      if (user.role === "admin") {
+      const adminRoles = ["SuperAdmin", "RestaurantAdmin", "DeliveryAdmin", "DeliveryBoy"];
+      if (adminRoles.includes(user.role)) {
         navigate("/admin/dashboard");
       } else {
         navigate("/");

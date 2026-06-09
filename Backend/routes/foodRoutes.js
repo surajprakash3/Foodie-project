@@ -7,27 +7,29 @@ const {
   getFoodsByRestaurant,
   updateFoodItem,
   deleteFoodItem,
+  getTrendingFoods,
 } = require("../controllers/foodController");
-const { protect, adminOnly } = require("../middleware/authMiddleware");
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 const { upload } = require("../config/cloudinary");
 
 // ...existing code...
 router.route("/").get(getAllFoods);
 router.route("/categories").get(getCategories);
+router.route("/trending").get(getTrendingFoods);
 router
   .route("/create")
-  .post(protect, adminOnly, upload.single("image"), createGlobalFoodItem);
+  .post(protect, authorizeRoles("SuperAdmin", "RestaurantAdmin"), upload.single("image"), createGlobalFoodItem);
 
 // ...existing code...
 router
   .route("/item/:id")
-  .put(protect, adminOnly, upload.single("image"), updateFoodItem)
-  .delete(protect, adminOnly, deleteFoodItem);
+  .put(protect, authorizeRoles("SuperAdmin", "RestaurantAdmin"), upload.single("image"), updateFoodItem)
+  .delete(protect, authorizeRoles("SuperAdmin", "RestaurantAdmin"), deleteFoodItem);
 
 // ...existing code...
 router
   .route("/:restaurantId")
   .get(getFoodsByRestaurant)
-  .post(protect, adminOnly, upload.single("image"), createFoodItem);
+  .post(protect, authorizeRoles("SuperAdmin", "RestaurantAdmin"), upload.single("image"), createFoodItem);
 
 module.exports = router;

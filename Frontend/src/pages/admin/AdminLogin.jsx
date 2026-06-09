@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import styles from "./AdminLogin.module.css";
 
+const ADMIN_ROLES = ["SuperAdmin", "RestaurantAdmin", "DeliveryAdmin", "DeliveryBoy"];
+
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,14 +27,20 @@ const AdminLogin = () => {
     try {
       const user = await login(email, password);
 
-      if (!user || user.role !== "admin") {
+      if (!user || !ADMIN_ROLES.includes(user.role)) {
         toast.error("Access denied. Admin only.");
         setLoading(false);
         return;
       }
 
-      toast.success("Welcome Admin!");
-      navigate("/admin/dashboard");
+      toast.success(`Welcome ${user.role === "SuperAdmin" ? "Super Admin" : user.role}!`);
+
+      // Route each role to the correct page
+      if (user.role === "DeliveryBoy" || user.role === "DeliveryAdmin") {
+        navigate("/admin/delivery");
+      } else {
+        navigate("/admin/dashboard");
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
     } finally {
@@ -56,7 +64,7 @@ const AdminLogin = () => {
             <label>Email</label>
             <input
               type="email"
-              placeholder="email"
+              placeholder="admin@foodie.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -84,7 +92,7 @@ const AdminLogin = () => {
         </form>
 
         <div className={styles.footer}>
-          © {new Date().getFullYear()} foodie
+          © {new Date().getFullYear()} Foodie
         </div>
       </div>
     </div>

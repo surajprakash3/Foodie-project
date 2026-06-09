@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../../utils/api";
 import toast from "react-hot-toast";
 import { FiClock } from "react-icons/fi";
+import { useSocket } from "../../context/SocketContext";
 
 const statusOptions = [
   "Pending",
@@ -46,6 +47,23 @@ const AdminOrders = () => {
     fetchOrders();
   }, []);
 
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewOrder = (newOrder) => {
+      setOrders((prev) => [newOrder, ...prev]);
+      toast.success("New Order Received! 🛎️", { duration: 5000, position: "top-right", style: { border: '1px solid #3b82f6', padding: '16px', color: '#1e40af' } });
+    };
+
+    socket.on("newOrder", handleNewOrder);
+
+    return () => {
+      socket.off("newOrder", handleNewOrder);
+    };
+  }, [socket]);
+
   const handleStatusChange = async (
     orderId,
     newStatus
@@ -68,8 +86,8 @@ const AdminOrders = () => {
     filterStatus === "All"
       ? orders
       : orders.filter(
-          (o) => o.status === filterStatus
-        );
+        (o) => o.status === filterStatus
+      );
 
   /* ───────── Loading ───────── */
   if (loading) {
@@ -96,21 +114,19 @@ const AdminOrders = () => {
               onClick={() =>
                 setFilterStatus(status)
               }
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
-                filterStatus === status
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${filterStatus === status
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-blue-50"
-              }`}
+                }`}
             >
               {status}
               {status === "All"
                 ? ` (${orders.length})`
-                : ` (${
-                    orders.filter(
-                      (o) =>
-                        o.status === status
-                    ).length
-                  })`}
+                : ` (${orders.filter(
+                  (o) =>
+                    o.status === status
+                ).length
+                })`}
             </button>
           )
         )}
@@ -162,11 +178,10 @@ const AdminOrders = () => {
 
                 <div className="flex items-center gap-3 mt-4 sm:mt-0">
                   <span
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border ${
-                      statusColors[
-                        order.status
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold border ${statusColors[
+                      order.status
                       ]
-                    }`}
+                      }`}
                   >
                     {order.status}
                   </span>

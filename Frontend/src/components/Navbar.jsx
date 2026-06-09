@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { FiShoppingCart, FiUser, FiLogOut, FiMenu, FiX } from "react-icons/fi";
 import { useState } from "react";
+import LocationPicker from "./Location/LocationPicker";
 import styles from "./Navbar.module.css";
 
 const Navbar = () => {
@@ -24,6 +25,10 @@ const Navbar = () => {
           <Link to="/" className={styles["navbar-logo"]}>
             <span>🍛Foodie</span>
           </Link>
+
+          <div style={{ marginLeft: "1rem" }}>
+            <LocationPicker />
+          </div>
 
           {/* Desktop Nav */}
           <div className={styles["navbar-links"]}>
@@ -74,13 +79,7 @@ const Navbar = () => {
               </div>
             )}
             {/* Admin Login – always visible */}
-            <Link
-              to="/admin/login"
-              className={styles["navbar-admin"]}
-            >
-              <span>🔐</span>
-              <span>Admin</span>
-            </Link>
+
           </div>
 
           {/* Mobile Hamburger */}

@@ -27,12 +27,43 @@ const Checkout = () => {
     setLoading(true);
 
     try {
-      await API.post("/orders", {
+      // 1. Place the initial order in the database (Pending status)
+      const { data: order } = await API.post("/orders", {
         deliveryAddress,
         paymentMethod,
       });
 
-      toast.success("Order placed successfully 🎉");
+      if (paymentMethod === "Online") {
+        // 2. Initialize Payment Gateway Checkout
+        setLoading(true);
+        toast.loading("Initializing Payment Gateway...", { id: "payment" });
+
+        try {
+          const { data: paymentIntent } = await API.post("/payments/checkout", {
+            orderId: order._id,
+            method: "Razorpay" // Defaulting to Razorpay for this demo, can make dynamic later
+          });
+
+          // In a real app, you would load the Razorpay SDK (window.Razorpay) script dynamically here
+          // and open the portal. For demo purposes, we will mock a successful verification immediately.
+          toast.success("Payment Gateway Initialized!", { id: "payment" });
+
+          // Mocking a successful payment verification back to our server
+          await API.post("/payments/verify", {
+            orderId: order._id,
+            gatewayPaymentId: "mock_pay_" + Date.now(),
+            gateway: paymentIntent.gateway
+          });
+
+          toast.success("Payment successful! Order placed 🎉", { id: "payment" });
+        } catch (paymentErr) {
+          toast.error(paymentErr.response?.data?.message || "Payment initialization failed", { id: "payment" });
+          return; // Stop flow, order remains Pending/unpaid
+        }
+      } else {
+        toast.success("Order placed successfully via COD 🎉");
+      }
+
       await fetchCart();
       navigate("/orders");
     } catch (err) {
@@ -82,11 +113,26 @@ const Checkout = () => {
             })}
           </div>
 
-          <div className={styles.summaryTotalRow}>
-            <span>Total</span>
-            <span className={styles.summaryTotal}>
-              ₹{cart.totalAmount}
-            </span>
+          <div className={styles.summaryTotalRow} style={{ borderTop: "1px solid #ddd", paddingTop: "12px", marginTop: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "0.9rem", color: "#666" }}>
+              <span>Subtotal</span>
+              <span>₹{cart.itemTotal || 0}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "0.9rem", color: "#666" }}>
+              <span>Tax (5%)</span>
+              <span>₹{cart.taxAmount || 0}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "0.9rem", color: "#666" }}>
+              <span>Delivery Fee</span>
+              <span>₹{cart.deliveryFee || 0}</span>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", fontSize: "1.2rem", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #ddd" }}>
+              <span>Total</span>
+              <span className={styles.summaryTotal}>
+                ₹{cart.totalAmount || 0}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -131,7 +177,7 @@ const Checkout = () => {
                   setPaymentMethod(e.target.value)
                 }
               />
-              Online Payment (Mock)
+              Online Payment (Credit/Debit, UPI)
             </label>
           </div>
 

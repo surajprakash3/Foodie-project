@@ -1,4 +1,5 @@
 const FoodItem = require("../models/FoodItem");
+const Order = require("../models/Order");
 const { cloudinary } = require("../config/cloudinary");
 
 // @desc    Get ALL food items (with optional category filter)
@@ -28,12 +29,47 @@ const getCategories = async (req, res) => {
   }
 };
 
+// @desc    Get trending foods
+// @route   GET /api/foods/trending
+// @access  Public
+const getTrendingFoods = async (req, res) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const topItems = await Order.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.foodId",
+          totalSold: { $sum: "$items.quantity" }
+        }
+      },
+      { $sort: { totalSold: -1 } },
+      { $limit: 10 }
+    ]);
+
+    const foodIds = topItems.map(item => item._id);
+    const foods = await FoodItem.find({ _id: { $in: foodIds } }).populate('restaurantId', 'name isPremium');
+
+    // Sort them in the exact order as the aggregation returned
+    const sortedFoods = foodIds
+      .map(id => foods.find(f => f._id.toString() === id.toString()))
+      .filter(Boolean);
+
+    res.json(sortedFoods);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // @desc    Create food item globally (no restaurantId needed)
 // @route   POST /api/foods/create
 // @access  Admin
 const createGlobalFoodItem = async (req, res) => {
   try {
-    const { name, price, category, isAvailable, rating, description } = req.body;
+    const { name, price, category, isAvailable, rating, description, isVeg, discount, preparationTime } = req.body;
     const image = req.file ? req.file.path : "";
 
     const foodItem = await FoodItem.create({
@@ -44,6 +80,9 @@ const createGlobalFoodItem = async (req, res) => {
       category,
       rating: rating !== undefined ? parseFloat(rating) : 4.0,
       isAvailable: isAvailable !== undefined ? isAvailable === "true" || isAvailable === true : true,
+      isVeg: isVeg !== undefined ? isVeg === "true" || isVeg === true : true,
+      discount: discount !== undefined ? parseFloat(discount) : 0,
+      preparationTime: preparationTime !== undefined ? parseInt(preparationTime) : 15,
     });
 
     res.status(201).json(foodItem);
@@ -57,7 +96,7 @@ const createGlobalFoodItem = async (req, res) => {
 // @access  Admin
 const createFoodItem = async (req, res) => {
   try {
-    const { name, price, category, isAvailable, rating, description } = req.body;
+    const { name, price, category, isAvailable, rating, description, isVeg, discount, preparationTime } = req.body;
     const image = req.file ? req.file.path : "";
 
     const foodItem = await FoodItem.create({
@@ -65,10 +104,13 @@ const createFoodItem = async (req, res) => {
       name,
       description: description || "",
       image,
-      price,
+      price: parseFloat(price),
       category,
       rating: rating !== undefined ? parseFloat(rating) : 4.0,
-      isAvailable: isAvailable !== undefined ? isAvailable : true,
+      isAvailable: isAvailable !== undefined ? isAvailable === "true" || isAvailable === true : true,
+      isVeg: isVeg !== undefined ? isVeg === "true" || isVeg === true : true,
+      discount: discount !== undefined ? parseFloat(discount) : 0,
+      preparationTime: preparationTime !== undefined ? parseInt(preparationTime) : 15,
     });
 
     res.status(201).json(foodItem);
@@ -102,7 +144,7 @@ const updateFoodItem = async (req, res) => {
       return res.status(404).json({ message: "Food item not found" });
     }
 
-    const { name, price, category, isAvailable, rating, description } = req.body;
+    const { name, price, category, isAvailable, rating, description, isVeg, discount, preparationTime } = req.body;
 
     food.name = name || food.name;
     food.description = description !== undefined ? description : food.description;
@@ -112,13 +154,16 @@ const updateFoodItem = async (req, res) => {
     food.isAvailable = isAvailable !== undefined
       ? (isAvailable === "true" || isAvailable === true)
       : food.isAvailable;
+    food.isVeg = isVeg !== undefined ? (isVeg === "true" || isVeg === true) : food.isVeg;
+    food.discount = discount !== undefined ? parseFloat(discount) : food.discount;
+    food.preparationTime = preparationTime !== undefined ? parseInt(preparationTime) : food.preparationTime;
 
     if (req.file) {
       if (food.image) {
         const publicId = food.image.split("/").slice(-2).join("/").split(".")[0];
         try {
           await cloudinary.uploader.destroy(publicId);
-        } catch (e) {}
+        } catch (e) { }
       }
       food.image = req.file.path;
     }
@@ -144,7 +189,7 @@ const deleteFoodItem = async (req, res) => {
       const publicId = food.image.split("/").slice(-2).join("/").split(".")[0];
       try {
         await cloudinary.uploader.destroy(publicId);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     await FoodItem.findByIdAndDelete(req.params.id);
@@ -162,4 +207,5 @@ module.exports = {
   getFoodsByRestaurant,
   updateFoodItem,
   deleteFoodItem,
+  getTrendingFoods,
 };

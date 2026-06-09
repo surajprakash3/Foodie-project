@@ -1,20 +1,10 @@
 import { useEffect, useState } from "react";
 import API from "../utils/api";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
+import { useLocation } from "../context/LocationContext";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { FiShoppingCart, FiStar, FiTrendingUp } from "react-icons/fi";
 import styles from "./Home.module.css";
-
-const CATEGORY_META = {
-  Pizza: { emoji: "🍕" },
-  Burgers: { emoji: "🍔" },
-  "Fast Food": { emoji: "🍟" },
-  Bakery: { emoji: "🧁" },
-  Indian: { emoji: "🍛" },
-  Drinks: { emoji: "🥤" },
-};
-
 const DEFAULT_META = { emoji: "🍽️" };
 
 /* ⭐ Star Rating */
@@ -36,48 +26,49 @@ const StarRating = ({ rating }) => {
   );
 };
 
-/* 🍔 Food Card */
-const FoodCard = ({ food, onAddToCart, addingId }) => {
-  const meta = CATEGORY_META[food.category] || DEFAULT_META;
+/* 🏪 Restaurant Card */
+const RestaurantCard = ({ restaurant }) => {
+  const navigate = useNavigate();
 
   return (
-    <div className={styles.card}>
+    <div
+      className={styles.card}
+      onClick={() => navigate(`/restaurant/${restaurant._id}`)}
+      style={{ cursor: 'pointer' }}
+    >
       <div className={styles.imageBox}>
-        {food.image ? (
-          <img src={food.image} alt={food.name} />
+        {restaurant.image ? (
+          <img src={restaurant.image} alt={restaurant.name} />
         ) : (
           <span className={styles.emoji}>
-            {meta.emoji}
+            🏪
           </span>
         )}
       </div>
 
       <div className={styles.content}>
-        <h3>{food.name}</h3>
+        <h3>{restaurant.name}</h3>
 
-        {food.description && (
-          <p className={styles.description}>
-            {food.description}
-          </p>
-        )}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
+          <StarRating rating={restaurant.rating || 4.2} />
+          {restaurant.isPremium && (
+            <span style={{ background: "#ffd700", color: "#000", fontSize: "12px", padding: "2px 8px", borderRadius: "12px", fontWeight: "bold" }}>
+              💎 Premium
+            </span>
+          )}
+        </div>
 
-        <StarRating rating={food.rating || 4.0} />
+        <p className={styles.description} style={{ marginTop: "12px", fontSize: "0.9rem", color: "#666" }}>
+          {restaurant.address}
+        </p>
 
-        <div className={styles.bottom}>
-          <span className={styles.price}>
-            ₹{food.price}
+        <div className={styles.bottom} style={{ marginTop: "16px", borderTop: "1px solid #eee", paddingTop: "12px" }}>
+          <span style={{ fontSize: "0.9rem", color: "#444" }}>
+            ⏱️ {restaurant.avgPreparationTime || 30} mins
           </span>
-
-          <button
-            onClick={() => onAddToCart(food._id)}
-            disabled={addingId === food._id}
-            className={styles.addBtn}
-          >
-            <FiShoppingCart size={14} />
-            {addingId === food._id
-              ? "Adding..."
-              : "Add"}
-          </button>
+          <span className={styles.status} style={{ color: restaurant.status === 'Open' ? 'green' : 'red', fontWeight: 600 }}>
+            {restaurant.status}
+          </span>
         </div>
       </div>
     </div>
@@ -85,70 +76,40 @@ const FoodCard = ({ food, onAddToCart, addingId }) => {
 };
 
 const Home = () => {
-  const { user } = useAuth();
-  const { addToCart } = useCart();
-
-  const [foods, setFoods] = useState([]);
-  const [categories, setCategories] =
-    useState([]);
-  const [activeCategory, setActiveCategory] =
-    useState("All");
-  const [loading, setLoading] =
-    useState(true);
-  const [addingId, setAddingId] =
-    useState(null);
+  const { location } = useLocation();
+  const [restaurants, setRestaurants] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchNearby = async () => {
       try {
-        const { data } =
-          await API.get("/foods");
-        setFoods(data);
-        const cats = [
-          ...new Set(
-            data.map((f) => f.category)
-          ),
-        ].sort();
-        setCategories(cats);
-      } catch {
-        toast.error("Could not load menu");
+        setLoading(true);
+        let url = "/restaurants/nearby";
+        if (location && location.lat && location.lng) {
+          url += `?lat=${location.lat}&lng=${location.lng}&distance=15`;
+        }
+
+        const { data } = await API.get(url);
+        // Only show Open or Busy restaurants by default, hide Closed usually (or just sort them to bottom)
+        const sorted = data.sort((a, b) => {
+          if (a.isPremium !== b.isPremium) return b.isPremium ? 1 : -1; // Premium first
+          return 0;
+        });
+
+        setRestaurants(sorted);
+      } catch (err) {
+        toast.error("Could not load nearby restaurants");
       } finally {
         setLoading(false);
       }
     };
-    fetchAll();
-  }, []);
 
-  const handleAddToCart = async (
-    foodId
-  ) => {
-    if (!user) {
-      toast.error("Please login first");
-      return;
-    }
+    fetchNearby();
+  }, [location]);
 
-    setAddingId(foodId);
-    try {
-      await addToCart(foodId, 1);
-      toast.success("Added to cart 🛒");
-    } catch {
-      toast.error("Failed to add");
-    } finally {
-      setAddingId(null);
-    }
-  };
-
-  const displayFoods =
-    activeCategory === "All"
-      ? foods
-      : foods.filter(
-          (f) =>
-            f.category === activeCategory
-        );
-
-  const trendingFoods = [...foods]
+  const trendingRestaurants = [...restaurants]
     .sort((a, b) => b.rating - a.rating)
-    .slice(0, 6);
+    .slice(0, 3);
 
   if (loading) {
     return (
@@ -225,18 +186,14 @@ const Home = () => {
         {/* TRENDING */}
         <div className={styles.trending}>
           <h2>
-            <FiTrendingUp /> Trending Now
+            <FiTrendingUp /> Top Rated Near You
           </h2>
 
           <div className={styles.trendingScroll}>
-            {trendingFoods.map((food) => (
-              <FoodCard
-                key={food._id}
-                food={food}
-                onAddToCart={
-                  handleAddToCart
-                }
-                addingId={addingId}
+            {trendingRestaurants.map((restaurant) => (
+              <RestaurantCard
+                key={restaurant._id}
+                restaurant={restaurant}
               />
             ))}
           </div>
@@ -245,42 +202,11 @@ const Home = () => {
         {/* HIGHLIGHT BLOCK */}
         <div className={styles.highlightBlock}>
           <h2>
-            Elevate Your Dining Experience
+            Explore Restaurants
           </h2>
           <p>
-            We blend technology with culinary
-            excellence to deliver a seamless
-            ordering experience.
+            {location ? `Showing delivery options near ${location.address}` : "Enter your location above to see accurate delivery times."}
           </p>
-        </div>
-
-        {/* CATEGORY */}
-        <div className={styles.categories}>
-          {["All", ...categories].map(
-            (cat) => {
-              const isActive =
-                activeCategory === cat;
-              const meta =
-                CATEGORY_META[cat] ||
-                DEFAULT_META;
-
-              return (
-                <button
-                  key={cat}
-                  onClick={() =>
-                    setActiveCategory(cat)
-                  }
-                  className={`${styles.categoryBtn} ${
-                    isActive
-                      ? styles.activeCategory
-                      : ""
-                  }`}
-                >
-                  {meta.emoji} {cat}
-                </button>
-              );
-            }
-          )}
         </div>
 
         {/* GRID */}
@@ -288,14 +214,10 @@ const Home = () => {
           className={styles.grid}
           id="menu"
         >
-          {displayFoods.map((food) => (
-            <FoodCard
-              key={food._id}
-              food={food}
-              onAddToCart={
-                handleAddToCart
-              }
-              addingId={addingId}
+          {restaurants.map((restaurant) => (
+            <RestaurantCard
+              key={restaurant._id}
+              restaurant={restaurant}
             />
           ))}
         </div>

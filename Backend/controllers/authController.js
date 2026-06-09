@@ -29,7 +29,7 @@ const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || "user",
+      role: role || "User",
     });
 
     const token = generateToken(user._id, user.role);

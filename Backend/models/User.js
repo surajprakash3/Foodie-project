@@ -21,8 +21,15 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
-      default: "user",
+      enum: ["User", "SuperAdmin", "RestaurantAdmin", "DeliveryAdmin", "DeliveryBoy"],
+      default: "User",
+    },
+    isPremium: {
+      type: Boolean,
+      default: false,
+    },
+    premiumExpiryDate: {
+      type: Date,
     },
   },
   { timestamps: true }

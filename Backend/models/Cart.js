@@ -8,6 +8,10 @@ const cartSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
+    },
     items: [
       {
         foodId: {
@@ -23,6 +27,22 @@ const cartSchema = new mongoose.Schema(
         },
       },
     ],
+    itemTotal: {
+      type: Number,
+      default: 0,
+    },
+    taxAmount: {
+      type: Number,
+      default: 0,
+    },
+    deliveryFee: {
+      type: Number,
+      default: 0,
+    },
+    discountAmount: {
+      type: Number,
+      default: 0,
+    },
     totalAmount: {
       type: Number,
       default: 0,

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import API from "../utils/api";
 import { FiPackage, FiClock } from "react-icons/fi";
 import styles from "./Orders.module.css";
+import { useSocket } from "../context/SocketContext";
+import toast from "react-hot-toast";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -20,6 +22,26 @@ const Orders = () => {
     };
     fetchOrders();
   }, []);
+
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleStatusUpdate = (data) => {
+      const { orderId, status } = data;
+      setOrders((prev) =>
+        prev.map((o) => (o._id === orderId ? { ...o, status } : o))
+      );
+      toast.success(`Order #${orderId.slice(-8).toUpperCase()} is now ${status}`, { duration: 4000 });
+    };
+
+    socket.on("orderStatusUpdated", handleStatusUpdate);
+
+    return () => {
+      socket.off("orderStatusUpdated", handleStatusUpdate);
+    };
+  }, [socket]);
 
   if (loading) {
     return (
